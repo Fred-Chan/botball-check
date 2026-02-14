@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Botball 器材检查器 2026</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .category {
+            margin-bottom: 40px;
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .parts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .part-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s;
+        }
+
+        .part-card:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .part-card.over-limit {
+            border-color: #dc3545;
+            background: #ffe6e6;
+        }
+
+        .part-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .part-info {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .robot-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .input-group label {
+            min-width: 80px;
+        }
+
+        .number-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-number {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 5px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .btn-number:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .btn-number:active {
+            transform: scale(0.95);
+        }
+
+        .input-group input {
+            width: 60px;
+            padding: 6px 8px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 1em;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .usage-info {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .usage-info.over {
+            background: #dc3545;
+            color: white;
+            font-weight: 600;
+        }
+
+        .summary {
+            position: sticky;
+            top: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .summary h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .parts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .robot-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .team-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .team-info label {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .team-info input {
+            flex: 1;
+            max-width: 300px;
+            padding: 10px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .team-info input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-print:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            body {
+                background: white;
+                margin: 0;
+                padding: 10px;
+            }
+
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .header {
+                background: white !important;
+                color: #333 !important;
+                padding: 10px 0 5px 0 !important;
+                text-align: left !important;
+            }
+
+            .header h1 {
+                font-size: 1.2em !important;
+                margin: 0 0 3px 0 !important;
+                display: inline-block;
+            }
+
+            .header p {
+                display: none !important;
+            }
+
+            .tabs, .controls, .btn, .search-box {
+                display: none !important;
+            }
+
+            .content {
+                padding: 5px 0 !important;
+            }
+
+            .team-info {
+                padding: 5px 0 !important;
+                margin-bottom: 8px !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+
+            .team-info label {
+                font-size: 0.9em !important;
+            }
+
+            .team-info input {
+                border: none !important;
+                padding: 0 5px !important;
+                font-weight: bold;
+            }
+
+            .summary {
+                background: white !important;
+                color: #333 !important;
+                border: 1px solid #333;
+                padding: 4px 8px !important;
+                margin-bottom: 8px !important;
+                position: static !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 15px !important;
+                clear: both !important;
+                page-break-after: avoid !important;
+            }
+
+            .summary h2 {
+                font-size: 0.9em !important;
+                margin: 0 !important;
+                display: inline-block !important;
+            }
+
+            .summary-stats {
+                display: flex !important;
+                gap: 15px !important;
+                font-size: 0.8em !important;
+                flex: 1 !important;
+                grid-template-columns: none !important;
+            }
+
+            .stat-card {
+                background: transparent !important;
+                color: #333 !important;
+                padding: 0 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 5px !important;
+            }
+
+            .stat-number {
+                font-size: 1.1em !important;
+                margin: 0 !important;
+                font-weight: bold !important;
+            }
+
+            .stat-label {
+                font-size: 0.85em !important;
+            }
+
+            .kit-content {
+                clear: both !important;
+                page-break-before: avoid !important;
+            }
+
+            .category {
+                margin-bottom: 6px !important;
+                page-break-inside: avoid;
+            }
+
+            .category-header {
+                background: #333 !important;
+                color: white !important;
+                padding: 3px 6px !important;
+                font-size: 0.85em !important;
+                margin-bottom: 4px !important;
+            }
+
+            .category.all-unused {
+                display: none !important;
+            }
+
+            .parts-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 5px !important;
+            }
+
+            .part-card {
+                padding: 4px 5px !important;
+                margin: 0 !important;
+                page-break-inside: avoid;
+                font-size: 0.75em !important;
+                border: 1px solid #ddd !important;
+            }
+
+            .part-card.unused {
+                display: none !important;
+            }
+
+            .part-header {
+                display: none !important;
+            }
+
+            .part-image {
+                display: none !important;
+            }
+
+            .part-name {
+                font-size: 0.85em !important;
+                margin-bottom: 2px !important;
+                font-weight: 600 !important;
+                line-height: 1.2 !important;
+            }
+
+            .part-info {
+                font-size: 0.75em !important;
+                margin-bottom: 2px !important;
+                color: #666 !important;
+            }
+
+            .robot-inputs {
+                display: flex !important;
+                gap: 5px !important;
+                margin-bottom: 2px !important;
+            }
+
+            .input-group {
+                flex: 1 !important;
+                font-size: 0.75em !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 2px !important;
+            }
+
+            .input-group label {
+                min-width: 50px !important;
+                font-size: 0.8em !important;
+            }
+
+            .number-control {
+                display: none !important;
+            }
+
+            .btn-number {
+                display: none !important;
+            }
+
+            .input-group input {
+                width: 25px !important;
+                padding: 1px 2px !important;
+                font-size: 0.85em !important;
+                border: 1px solid #333 !important;
+                text-align: center !important;
+                font-weight: bold !important;
+            }
+
+            .usage-info {
+                padding: 2px 4px !important;
+                font-size: 0.7em !important;
+                background: #f8f9fa !important;
+                display: flex !important;
+                justify-content: space-between !important;
+            }
+
+            .usage-info.over {
+                background: #ffebee !important;
+                color: #d32f2f !important;
+                border: 1px solid #d32f2f !important;
+                font-weight: bold !important;
+            }
+
+            .hidden {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Botball 器材检查器 2026</h1>
+            <p>跟踪两个机器人的零件使用情况，确保符合规则</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-kit="electronics">电子套件</button>
+            <button class="tab" data-kit="metal">金属零件</button>
+            <button class="tab" data-kit="lego">乐高零件</button>
+        </div>
+
+        <div class="content">
+            <div class="team-info">
+                <label for="teamNumber">🏆 队伍编号:</label>
+                <input type="text" id="teamNumber" placeholder="请输入队伍编号..." onchange="saveTeamNumber()">
+            </div>
+
+            <div class="summary">
+                <h2>📊 使用统计</h2>
+                <div class="summary-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalParts">0</div>
+                        <div class="stat-label">总零件类型</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="usedParts">0</div>
+                        <div class="stat-label">已使用类型</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="overLimitParts">0</div>
+                        <div class="stat-label">超规零件</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <input type="text" class="search-box" id="searchBox" placeholder="🔍 搜索零件名称...">
+                <button class="btn btn-print" onclick="printReport()">🖨️ 打印</button>
+                <button class="btn btn-warning" onclick="clearCurrentKit()">🧹 清空当前套件</button>
+                <button class="btn btn-secondary" onclick="exportData()">💾 导出数据</button>
+                <button class="btn btn-secondary" onclick="importData()">📥 导入数据</button>
+                <button class="btn btn-danger" onclick="resetAll()">🔄 重置所有</button>
+            </div>
+
+            <div id="electronicsKit" class="kit-content"></div>
+            <div id="metalKit" class="kit-content hidden"></div>
+            <div id="legoKit" class="kit-content hidden"></div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+    <script>
+        const kitsData = {
+            electronics: {
+                "传感器 - 模拟": [
+                    { name: "ET (测距传感器)", limit: 2 },
+                    { name: "Tophat (反射传感器)", limit: 4 },
+                    { name: "Small Tophat (小型反射传感器)", limit: 2 },
+                    { name: "Light (光线传感器)", limit: 3 },
+                    { name: "Linear Slide (线性滑块)", limit: 1 }
+                ],
+                "传感器 - 数字": [
+                    { name: "Lever (杠杆传感器)", limit: 2 },
+                    { name: "Small Touch (小触碰传感器)", limit: 4 },
+                    { name: "Large Touch (大触碰传感器)", limit: 6 }
+                ],
+                "运动部件": [
+                    { name: "Servo (舵机)", limit: 5 },
+                    { name: "Black Gear Motor (黑色齿轮电机)", limit: 8 },
+                    { name: "Micro Servo (微型舵机)", limit: 2 }
+                ],
+                "控制器": [
+                    { name: "Wombat (控制器)", limit: 2 }
+                ],
+                "其他配件": [
+                    { name: "Black Camera (摄像头)", limit: 1 },
+                    { name: "Wombat Battery Charger (电池充电器)", limit: 2 },
+                    { name: "Wombat Battery (电池)", limit: 2 },
+                    { name: "Servo Extension Cable (舵机延长线)", limit: 3 },
+                    { name: "Sensor Extension Cable (传感器延长线)", limit: 2 },
+                    { name: "Solarbotics Wheel (轮子)", limit: 4 },
+                    { name: "Mecanum Wheel (麦轮)", limit: 4 }
+                ]
+            },
+            metal: {
+                "KIPR 金属件": [
+                    { name: "Strap 1 x 19 (带孔条 1x19)", limit: 4, bendable: true },
+                    { name: "Strap 1 x 10 (带孔条 1x10)", limit: 6, bendable: true },
+                    { name: "Channel 3 x 8 (通道 3x8)", limit: 3 },
+                    { name: "Channel 3 x 12 (通道 3x12)", limit: 2 },
+                    { name: "Channel 3 x 16 (通道 3x16)", limit: 1 },
+                    { name: "Plate 4 x 12 (板 4x12)", limit: 4, bendable: true },
+                    { name: "Chassis (底盘)", limit: 2 },
+                    { name: "D Bracket (D型支架)", limit: 1 },
+                    { name: "Angle Bracket (角支架)", limit: 2 },
+                    { name: "Plus Plate (十字板)", limit: 1, bendable: true },
+                    { name: "Servo Bracket (舵机支架)", limit: 8 },
+                    { name: "Round Servo Horn (圆形舵盘)", limit: 2 },
+                    { name: "1 x 5 Servo Horn (1x5舵盘)", limit: 4 },
+                    { name: "Micro Servo Mount (微型舵机座)", limit: 2 }
+                ],
+                "螺丝、螺母和立柱": [
+                    { name: "Screw 8-32 x 1/4\" (螺丝)", limit: 40 },
+                    { name: "Screw 8-32 x 1/2\" (螺丝)", limit: 90 },
+                    { name: "Screw 8-32 x 3/4\" (螺丝)", limit: 70 },
+                    { name: "Nut 8-32 Keps (螺母)", limit: 170 },
+                    { name: "Nut 8-32 Nylock (自锁螺母)", limit: 30 },
+                    { name: "Standoff 8-32 x 1/2\" (立柱)", limit: 12 },
+                    { name: "Standoff 8-32 x 1\" (立柱)", limit: 7 },
+                    { name: "Standoff 8-32 x 2\" (立柱)", limit: 2 },
+                    { name: "Standoff 8-32 x 3\" (立柱)", limit: 1 },
+                    { name: "Short Silver Servo Horn Screw M3 (舵盘螺丝)", limit: 6 },
+                    { name: "18-8 Washer (垫圈)", limit: 6 },
+                    { name: "Silver Servo Horn Nut M3 (舵盘螺母)", limit: 10 },
+                    { name: "Silver Servo Horn Machine Screw M3 (舵盘机螺丝)", limit: 10 },
+                    { name: "Threaded Rod 8-32 x 1\" (螺纹杆)", limit: 10 },
+                    { name: "Threaded Rod 8-32 x 2\" (螺纹杆)", limit: 2 },
+                    { name: "Threaded Rod 8-32 x 3\" (螺纹杆)", limit: 2 },
+                    { name: "Threaded Rod 8-32 x 6\" (螺纹杆)", limit: 1 },
+                    { name: "Brass Screws (黄铜螺丝)", limit: 10 },
+                    { name: "2-56 1\" Caster Screw (万向轮螺丝)", limit: 5 },
+                    { name: "2-56 3/8\" Micro Servo Mount Screw (微舵机座螺丝)", limit: 6 },
+                    { name: "M3 x 0.5\" x 6\" Mecanum Wheel Screw (麦轮螺丝)", limit: 6 }
+                ],
+                "其他": [
+                    { name: "Caster (万向轮)", limit: 2 }
+                ]
+            },
+            lego: {
+                "轴 (Axles)": [
+                    { name: "#2 Axle (32062)", limit: 32 },
+                    { name: "#3 Axle (4519)", limit: 48 },
+                    { name: "#3 Axle w/ stud (6587)", limit: 4 },
+                    { name: "#4 Axle (3705)", limit: 16 },
+                    { name: "#4 Axle w/ stop (87083)", limit: 4 },
+                    { name: "#5 Axle (32073)", limit: 12 },
+                    { name: "#5.5 Axle w/ stop (32209)", limit: 2 },
+                    { name: "#6 Axle (3706)", limit: 16 },
+                    { name: "#7 Axle (44294)", limit: 16 },
+                    { name: "#8 Axle (3707)", limit: 8 },
+                    { name: "#10 Axle (3737)", limit: 4 },
+                    { name: "#12 Axle (3708)", limit: 2 }
+                ],
+                "连接件 (Connectors)": [
+                    { name: "#1 Angle Connector (32013)", limit: 12 },
+                    { name: "#2 Angle Connector (32034)", limit: 4 },
+                    { name: "#3 Angle Connector (32016)", limit: 4 },
+                    { name: "#4 Angle Connector (32192)", limit: 4 },
+                    { name: "#5 Angle Connector (32015)", limit: 4 },
+                    { name: "#6 Angle Connector (32014)", limit: 8 },
+                    { name: "Axle Joiner Inline Smooth (6538c)", limit: 32 },
+                    { name: "Axle Connector Double Rubber (45590)", limit: 8 },
+                    { name: "Axle Joiner Perpendicular (6536)", limit: 48 },
+                    { name: "Axle Joiner Perpendicular 3 Long (32184)", limit: 8 },
+                    { name: "Axle Joiner Perpendicular Double (32291)", limit: 8 },
+                    { name: "Axle Joiner Perpendicular Double Split (41678)", limit: 6 },
+                    { name: "Axle Joiner Perpendicular Triple (63869)", limit: 8 },
+                    { name: "Axle Joiner Perpendicular w/ 2 Holes (42003)", limit: 12 },
+                    { name: "Bionicle Tooth (x346)", limit: 8 },
+                    { name: "Pin Connector (62462)", limit: 4 },
+                    { name: "Pin Connector Perpendicular Double 3 Long (32557)", limit: 8 },
+                    { name: "Pin Connector Perpendicular 2 x 2 Bent (44809)", limit: 4 },
+                    { name: "Pole Reverser (6553)", limit: 4 },
+                    { name: "Axle Connector w/ Axle Hole (32039)", limit: 4 },
+                    { name: "Axle Connector Hub w/ 3 Axles (57585)", limit: 2 }
+                ],
+                "举升臂 - 厚 (Liftarms Thick)": [
+                    { name: "1 x 2 Liftarm w/ Axle Hole (60483)", limit: 8 },
+                    { name: "1 x 3 Liftarm (32523)", limit: 16 },
+                    { name: "1 x 5 Liftarm (32316)", limit: 11 },
+                    { name: "1 x 5 Liftarm Bent 2x4 (32140)", limit: 12 },
+                    { name: "1 x 7 Liftarm (32524)", limit: 16 },
+                    { name: "1 x 7 Liftarm Bent 4x4 (32348)", limit: 16 },
+                    { name: "1 x 7 Liftarm Bent 3x5 (32526)", limit: 8 },
+                    { name: "1 x 9 Liftarm (40490)", limit: 10 },
+                    { name: "1 x 9 Liftarm Bent 3x7 (32271)", limit: 4 },
+                    { name: "1 x 11 Liftarm (32525)", limit: 10 },
+                    { name: "1 x 11.5 Liftarm Double Bent (32009)", limit: 6 },
+                    { name: "1 x 13 Liftarm (41239)", limit: 10 },
+                    { name: "1 x 15 Liftarm (32278)", limit: 14 }
+                ],
+                "销钉 (Pins)": [
+                    { name: "Pin 1/2 (4274)", limit: 16 },
+                    { name: "Pin 3/4 (32002)", limit: 16 },
+                    { name: "Pin w/out Friction (3673)", limit: 25 },
+                    { name: "Pin w/ Friction (2780)", limit: 122 },
+                    { name: "Pin Long w/ Friction (6558)", limit: 40 },
+                    { name: "Pin Long w/ out Friction (32556)", limit: 13 },
+                    { name: "Pin w/ Friction 3 Long w/ Stop Bush (32054)", limit: 16 },
+                    { name: "Pin w/ Towball (6628)", limit: 8 },
+                    { name: "Axle w/ Towball (2736)", limit: 2 },
+                    { name: "Axle Pin w/ Friction (43093)", limit: 80 },
+                    { name: "Axle Pin w/ out Friction (3749)", limit: 20 },
+                    { name: "Pin Connector Perpendicular 3 Long w/ 4 Pins (48989)", limit: 12 },
+                    { name: "Pin Connector Perpendicular 3x3 Bent w/ 4 Pins (55615)", limit: 4 },
+                    { name: "Pin Double w/ Axle Hole (32138)", limit: 4 }
+                ],
+                "齿轮 (Gears)": [
+                    { name: "8 Tooth (3647)", limit: 8 },
+                    { name: "12 Tooth Double Bevel (32270)", limit: 4 },
+                    { name: "12 Tooth Single Bevel (6589)", limit: 3 },
+                    { name: "16 Tooth (4019)", limit: 6 },
+                    { name: "20 Tooth Double Bevel (32269)", limit: 12 },
+                    { name: "24 Tooth (3648)", limit: 6 },
+                    { name: "36 Tooth Double Bevel (32498)", limit: 2 },
+                    { name: "40 Tooth (3649)", limit: 4 },
+                    { name: "Bush 1/2 (4265c)", limit: 42 },
+                    { name: "Bush (3713)", limit: 42 },
+                    { name: "Cam (6575)", limit: 2 },
+                    { name: "Differential (6573)", limit: 1 },
+                    { name: "Gear Rack 1 x 4 (3743)", limit: 4 },
+                    { name: "Knob Wheel (32072)", limit: 2 },
+                    { name: "Pulley Wheel (4185)", limit: 4 },
+                    { name: "Worm Gear (4716)", limit: 2 }
+                ],
+                "举升臂 - 薄 (Liftarms Thin)": [
+                    { name: "1 x 3 Liftarm Thin (6632)", limit: 16 },
+                    { name: "Triangle (2905)", limit: 4 }
+                ],
+                "板 / 瓦片 (Plates/Tiles)": [
+                    { name: "1 x 2 Tile (3069b)", limit: 4 },
+                    { name: "1 x 2 Plate (3023)", limit: 8 },
+                    { name: "1 x 4 Plate (3710)", limit: 4 },
+                    { name: "1 x 6 Plate (3666)", limit: 4 },
+                    { name: "1 x 8 Plate (3460)", limit: 4 },
+                    { name: "2 x 2 Round Dish (2654)", limit: 2 },
+                    { name: "2 x 2 Plate Round (4032b)", limit: 4 },
+                    { name: "2 x 4 Plate w/ holes (3709b)", limit: 4 },
+                    { name: "2 x 6 Plate w/ holes (32001)", limit: 4 },
+                    { name: "2 x 8 Plate w/ holes (3738)", limit: 4 }
+                ],
+                "积木 (Bricks)": [
+                    { name: "1 x 1 Cone (4589)", limit: 3 },
+                    { name: "1 x 2 w/ axle hole (32064)", limit: 4 },
+                    { name: "1 x 2 w/ Hole (3700)", limit: 4 },
+                    { name: "1 x 4 w/ Holes (3701)", limit: 4 },
+                    { name: "1 x 6 w/ Holes (3894)", limit: 2 },
+                    { name: "1 x 8 w/ Holes (3702)", limit: 2 },
+                    { name: "1 x 12 w/ Holes (3895)", limit: 2 },
+                    { name: "1 x 14 w/ Holes (32018)", limit: 4 },
+                    { name: "2 x 2 Round (3941)", limit: 2 }
+                ],
+                "轮子 (Wheels)": [
+                    { name: "Wheel 30.4 x 20 (56145)", limit: 8 },
+                    { name: "Technic Wedge Belt Wheel Tire (70162)", limit: 4 },
+                    { name: "Tire 56 x 26 Balloon (55976)", limit: 2 },
+                    { name: "Tire 43.2 x 22 ZR (44309)", limit: 2 }
+                ]
+            }
+        };
+
+        let currentKit = 'electronics';
+        let partsUsage = {};
+        let teamNumber = '';
+
+        function initializeData() {
+            const saved = localStorage.getItem('botballPartsUsage');
+            if (saved) {
+                partsUsage = JSON.parse(saved);
+            }
+
+            const savedTeam = localStorage.getItem('botballTeamNumber');
+            if (savedTeam) {
+                teamNumber = savedTeam;
+                document.getElementById('teamNumber').value = teamNumber;
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('botballPartsUsage', JSON.stringify(partsUsage));
+        }
+
+        function saveTeamNumber() {
+            teamNumber = document.getElementById('teamNumber').value;
+            localStorage.setItem('botballTeamNumber', teamNumber);
+        }
+
+        function printReport() {
+            // 标记所有未使用的零件和分类
+            document.querySelectorAll('.category').forEach(category => {
+                const cards = category.querySelectorAll('.part-card');
+                let allUnused = true;
+
+                cards.forEach(card => {
+                    const key = card.getAttribute('data-part');
+                    const usage = partsUsage[key] || { robot1: 0, robot2: 0 };
+                    const total = usage.robot1 + usage.robot2;
+
+                    if (total === 0) {
+                        card.classList.add('unused');
+                    } else {
+                        card.classList.remove('unused');
+                        allUnused = false;
+                    }
+                });
+
+                // 如果整个分类都未使用，标记这个分类
+                if (allUnused) {
+                    category.classList.add('all-unused');
+                } else {
+                    category.classList.remove('all-unused');
+                }
+            });
+
+            // 显示所有套件标签页内容以便打印
+            document.querySelectorAll('.kit-content').forEach(content => {
+                content.classList.remove('hidden');
+            });
+
+            // 打印
+            window.print();
+
+            // 打印后恢复隐藏未激活的标签页
+            setTimeout(() => {
+                document.querySelectorAll('.kit-content').forEach((content, index) => {
+                    const kitNames = ['electronics', 'metal', 'lego'];
+                    if (kitNames[index] !== currentKit) {
+                        content.classList.add('hidden');
+                    }
+                });
+            }, 100);
+        }
+
+        function getPartKey(kitName, partName) {
+            return `${kitName}_${partName}`;
+        }
+
+        function renderKit(kitName) {
+            const container = document.getElementById(`${kitName}Kit`);
+            const kit = kitsData[kitName];
+            let html = '';
+
+            for (const [category, parts] of Object.entries(kit)) {
+                html += `
+                    <div class="category">
+                        <div class="category-header">${category}</div>
+                        <div class="parts-grid">
+                `;
+
+                parts.forEach(part => {
+                    const key = getPartKey(kitName, part.name);
+                    const usage = partsUsage[key] || { robot1: 0, robot2: 0 };
+                    const total = usage.robot1 + usage.robot2;
+                    const isOver = total > part.limit;
+                    const bendableInfo = part.bendable ? ' (可弯曲)' : '';
+
+                    // 只在有图片时显示图片
+                    const imageSection = part.image ? `
+                        <div class="part-header">
+                            <img src="${part.image}" alt="${part.name}" class="part-image">
+                            <div class="part-details">
+                                <div class="part-name">${part.name}</div>
+                                <div class="part-info">套件限制: ${part.limit}${bendableInfo}</div>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="part-name">${part.name}</div>
+                        <div class="part-info">套件限制: ${part.limit}${bendableInfo}</div>
+                    `;
+
+                    html += `
+                        <div class="part-card ${isOver ? 'over-limit' : ''}" data-part="${key}">
+                            ${imageSection}
+                            <div class="robot-inputs">
+                                <div class="input-group">
+                                    <label>机器人 1</label>
+                                    <div class="number-control">
+                                        <button class="btn-number" onclick="changeValue('${key}', 'robot1', -1, ${part.limit})">-</button>
+                                        <input type="number" min="0" value="${usage.robot1}" id="${key}_robot1"
+                                               onchange="updatePart('${key}', 'robot1', this.value, ${part.limit})">
+                                        <button class="btn-number" onclick="changeValue('${key}', 'robot1', 1, ${part.limit})">+</button>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label>机器人 2</label>
+                                    <div class="number-control">
+                                        <button class="btn-number" onclick="changeValue('${key}', 'robot2', -1, ${part.limit})">-</button>
+                                        <input type="number" min="0" value="${usage.robot2}" id="${key}_robot2"
+                                               onchange="updatePart('${key}', 'robot2', this.value, ${part.limit})">
+                                        <button class="btn-number" onclick="changeValue('${key}', 'robot2', 1, ${part.limit})">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="usage-info ${isOver ? 'over' : ''}">
+                                <span>已用: ${total}</span>
+                                <span>剩余: ${part.limit - total}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function updatePart(key, robot, value, limit) {
+            if (!partsUsage[key]) {
+                partsUsage[key] = { robot1: 0, robot2: 0 };
+            }
+            partsUsage[key][robot] = parseInt(value) || 0;
+            saveData();
+            updateSummary();
+            updatePartCard(key, limit);
+        }
+
+        function changeValue(key, robot, delta, limit) {
+            if (!partsUsage[key]) {
+                partsUsage[key] = { robot1: 0, robot2: 0 };
+            }
+            const currentValue = partsUsage[key][robot] || 0;
+            const newValue = Math.max(0, currentValue + delta);
+
+            partsUsage[key][robot] = newValue;
+
+            // 更新输入框显示
+            const input = document.getElementById(`${key}_${robot}`);
+            if (input) {
+                input.value = newValue;
+            }
+
+            saveData();
+            updateSummary();
+            updatePartCard(key, limit);
+        }
+
+        function updatePartCard(key, limit) {
+            const card = document.querySelector(`[data-part="${key}"]`);
+            if (!card) return;
+
+            const usage = partsUsage[key] || { robot1: 0, robot2: 0 };
+            const total = usage.robot1 + usage.robot2;
+            const isOver = total > limit;
+
+            card.classList.toggle('over-limit', isOver);
+            const usageInfo = card.querySelector('.usage-info');
+            usageInfo.classList.toggle('over', isOver);
+            usageInfo.innerHTML = `
+                <span>已用: ${total}</span>
+                <span>剩余: ${limit - total}</span>
+            `;
+        }
+
+        function updateSummary() {
+            const kit = kitsData[currentKit];
+            let totalParts = 0;
+            let usedParts = 0;
+            let overLimitParts = 0;
+
+            for (const [category, parts] of Object.entries(kit)) {
+                parts.forEach(part => {
+                    totalParts++;
+                    const key = getPartKey(currentKit, part.name);
+                    const usage = partsUsage[key] || { robot1: 0, robot2: 0 };
+                    const total = usage.robot1 + usage.robot2;
+
+                    if (total > 0) usedParts++;
+                    if (total > part.limit) overLimitParts++;
+                });
+            }
+
+            document.getElementById('totalParts').textContent = totalParts;
+            document.getElementById('usedParts').textContent = usedParts;
+            document.getElementById('overLimitParts').textContent = overLimitParts;
+        }
+
+        function switchKit(kitName) {
+            currentKit = kitName;
+
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.kit-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(`${kitName}Kit`).classList.remove('hidden');
+
+            updateSummary();
+        }
+
+        function searchParts() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            document.querySelectorAll('.part-card').forEach(card => {
+                const partName = card.querySelector('.part-name').textContent.toLowerCase();
+                card.style.display = partName.includes(searchTerm) ? '' : 'none';
+            });
+        }
+
+        function exportData() {
+            const exportObj = {
+                teamNumber: teamNumber,
+                partsUsage: partsUsage,
+                exportDate: new Date().toISOString()
+            };
+            const dataStr = JSON.stringify(exportObj, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const filename = teamNumber ?
+                `botball_team_${teamNumber}_${new Date().toISOString().split('T')[0]}.json` :
+                `botball_parts_${new Date().toISOString().split('T')[0]}.json`;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData() {
+            document.getElementById('fileInput').click();
+        }
+
+        function resetAll() {
+            if (confirm('确定要重置所有数据吗？此操作无法撤销！')) {
+                partsUsage = {};
+                teamNumber = '';
+                document.getElementById('teamNumber').value = '';
+                saveData();
+                localStorage.removeItem('botballTeamNumber');
+                renderKit(currentKit);
+                updateSummary();
+            }
+        }
+
+        function clearCurrentKit() {
+            const kitNames = {
+                'electronics': '电子套件',
+                'metal': '金属零件',
+                'lego': '乐高零件'
+            };
+            const kitName = kitNames[currentKit] || currentKit;
+
+            if (confirm(`确定要清空"${kitName}"的所有数据吗？此操作无法撤销！`)) {
+                const kit = kitsData[currentKit];
+
+                // 清空当前套件的所有零件数据
+                for (const [category, parts] of Object.entries(kit)) {
+                    parts.forEach(part => {
+                        const key = getPartKey(currentKit, part.name);
+                        if (partsUsage[key]) {
+                            delete partsUsage[key];
+                        }
+                    });
+                }
+
+                saveData();
+                renderKit(currentKit);
+                updateSummary();
+            }
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    // 兼容新旧格式
+                    if (data.partsUsage && data.teamNumber !== undefined) {
+                        // 新格式
+                        partsUsage = data.partsUsage;
+                        teamNumber = data.teamNumber;
+                        document.getElementById('teamNumber').value = teamNumber;
+                        localStorage.setItem('botballTeamNumber', teamNumber);
+                    } else {
+                        // 旧格式
+                        partsUsage = data;
+                    }
+
+                    saveData();
+                    renderKit(currentKit);
+                    updateSummary();
+                    alert('数据导入成功！');
+                } catch (err) {
+                    alert('导入失败：文件格式错误');
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        document.getElementById('searchBox').addEventListener('input', searchParts);
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const kitName = e.target.dataset.kit;
+                switchKit(kitName);
+            });
+        });
+
+        initializeData();
+        Object.keys(kitsData).forEach(kitName => renderKit(kitName));
+        updateSummary();
+    </script>
+</body>
+</html>
