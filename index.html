@@ -347,6 +347,72 @@
             display: none;
         }
 
+        .pdf-links {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .pdf-links h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 1.2em;
+        }
+
+        .pdf-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .pdf-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .pdf-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .pdf-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .pdf-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .pdf-desc {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .search-result-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            margin-left: 8px;
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
         .team-info {
             background: white;
             padding: 20px;
@@ -651,12 +717,34 @@
             </div>
 
             <div class="controls">
-                <input type="text" class="search-box" id="searchBox" placeholder="🔍 搜索零件名称...">
+                <input type="text" class="search-box" id="searchBox" placeholder="🔍 搜索零件名称（搜索全部套件）..." oninput="searchAllKits()">
                 <button class="btn btn-print" onclick="printReport()">🖨️ 打印</button>
+                <button class="btn btn-primary" onclick="togglePDFLinks()">📋 查看清单PDF</button>
                 <button class="btn btn-warning" onclick="clearCurrentKit()">🧹 清空当前套件</button>
                 <button class="btn btn-secondary" onclick="exportData()">💾 导出数据</button>
                 <button class="btn btn-secondary" onclick="importData()">📥 导入数据</button>
                 <button class="btn btn-danger" onclick="resetAll()">🔄 重置所有</button>
+            </div>
+
+            <div id="pdfLinks" class="pdf-links hidden">
+                <h3>📋 官方套件清单PDF</h3>
+                <div class="pdf-grid">
+                    <a href="https://www.botball.org/kits/2026-Electronics-Kit.pdf" target="_blank" class="pdf-card">
+                        <span class="pdf-icon">📦</span>
+                        <span class="pdf-title">电子套件清单</span>
+                        <span class="pdf-desc">2026 Electronics Kit</span>
+                    </a>
+                    <a href="https://www.botball.org/kits/2026-Metal-Parts.pdf" target="_blank" class="pdf-card">
+                        <span class="pdf-icon">🔧</span>
+                        <span class="pdf-title">金属零件清单</span>
+                        <span class="pdf-desc">2026 KIPR Metal Parts</span>
+                    </a>
+                    <a href="https://www.botball.org/kits/2026-Lego-Parts.pdf" target="_blank" class="pdf-card">
+                        <span class="pdf-icon">🧱</span>
+                        <span class="pdf-title">乐高零件清单</span>
+                        <span class="pdf-desc">2026 Lego Parts</span>
+                    </a>
+                </div>
             </div>
 
             <div id="electronicsKit" class="kit-content"></div>
@@ -1094,10 +1182,23 @@
             });
             event.target.classList.add('active');
 
+            // 清除搜索
+            document.getElementById('searchBox').value = '';
+
+            // 清除所有搜索标记
+            document.querySelectorAll('.search-result-badge').forEach(badge => {
+                badge.remove();
+            });
+
             document.querySelectorAll('.kit-content').forEach(content => {
                 content.classList.add('hidden');
             });
             document.getElementById(`${kitName}Kit`).classList.remove('hidden');
+
+            // 显示所有零件
+            document.querySelectorAll('.part-card').forEach(card => {
+                card.style.display = '';
+            });
 
             updateSummary();
         }
@@ -1108,6 +1209,84 @@
                 const partName = card.querySelector('.part-name').textContent.toLowerCase();
                 card.style.display = partName.includes(searchTerm) ? '' : 'none';
             });
+        }
+
+        function searchAllKits() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase().trim();
+
+            if (!searchTerm) {
+                // 如果搜索框为空，只显示当前套件
+                document.querySelectorAll('.kit-content').forEach((content, index) => {
+                    const kitNames = ['electronics', 'metal', 'lego'];
+                    if (kitNames[index] === currentKit) {
+                        content.classList.remove('hidden');
+                        content.querySelectorAll('.part-card').forEach(card => {
+                            card.style.display = '';
+                            // 移除搜索标记
+                            const badge = card.querySelector('.search-result-badge');
+                            if (badge) badge.remove();
+                        });
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+                return;
+            }
+
+            // 搜索所有套件
+            let foundInKits = [];
+            document.querySelectorAll('.kit-content').forEach((content, index) => {
+                const kitNames = ['electronics', 'metal', 'lego'];
+                const kitName = kitNames[index];
+                let hasMatches = false;
+
+                content.querySelectorAll('.part-card').forEach(card => {
+                    const partName = card.querySelector('.part-name').textContent.toLowerCase();
+
+                    if (partName.includes(searchTerm)) {
+                        card.style.display = '';
+                        hasMatches = true;
+
+                        // 移除旧的标记
+                        const oldBadge = card.querySelector('.search-result-badge');
+                        if (oldBadge) oldBadge.remove();
+
+                        // 添加套件标记
+                        const kitLabels = {
+                            'electronics': '电子',
+                            'metal': '金属',
+                            'lego': '乐高'
+                        };
+                        const badge = document.createElement('span');
+                        badge.className = 'search-result-badge';
+                        badge.textContent = kitLabels[kitName];
+                        const partNameEl = card.querySelector('.part-name');
+                        partNameEl.appendChild(badge);
+                    } else {
+                        card.style.display = 'none';
+                        // 移除标记
+                        const badge = card.querySelector('.search-result-badge');
+                        if (badge) badge.remove();
+                    }
+                });
+
+                if (hasMatches) {
+                    content.classList.remove('hidden');
+                    foundInKits.push(kitName);
+                } else {
+                    content.classList.add('hidden');
+                }
+            });
+
+            // 如果没有找到任何结果，显示当前套件
+            if (foundInKits.length === 0) {
+                document.getElementById(`${currentKit}Kit`).classList.remove('hidden');
+            }
+        }
+
+        function togglePDFLinks() {
+            const pdfLinks = document.getElementById('pdfLinks');
+            pdfLinks.classList.toggle('hidden');
         }
 
         function exportData() {
@@ -1203,8 +1382,6 @@
             };
             reader.readAsText(file);
         });
-
-        document.getElementById('searchBox').addEventListener('input', searchParts);
 
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', (e) => {
