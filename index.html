@@ -254,37 +254,54 @@
             letter-spacing: 0.5px;
         }
 
-        .summary-stats {
+        .summary-kits {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             border-top: 1px solid #e0ddd8;
             padding-top: 12px;
         }
 
-        .stat-card {
-            background: transparent;
-            padding: 0;
-            border-radius: 0;
+        .kit-summary {
             text-align: center;
             border-right: 1px solid #e0ddd8;
+            padding: 0 10px;
         }
 
-        .stat-card:last-child {
+        .kit-summary:last-child {
             border-right: none;
         }
 
-        .stat-number {
-            font-size: 2em;
+        .kit-summary-title {
+            font-size: 0.85em;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .kit-summary-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 0.9em;
+        }
+
+        .kit-summary-stats > span:first-child {
+            font-size: 1.5em;
             font-weight: 900;
-            margin-bottom: 3px;
             color: #1a1a1a;
         }
 
-        .stat-label {
-            font-size: 0.8em;
-            opacity: 0.6;
-            font-weight: 500;
+        .over-count {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .over-count.has-over {
+            color: #c41e3a;
+            font-weight: 700;
         }
 
         .controls {
@@ -585,36 +602,72 @@
                 display: inline-block !important;
             }
 
-            .summary-stats {
+            .summary-kits {
                 display: flex !important;
-                gap: 15px !important;
+                gap: 12px !important;
                 font-size: 0.8em !important;
                 flex: 1 !important;
                 grid-template-columns: none !important;
+                padding-top: 0 !important;
+                border-top: none !important;
             }
 
-            .stat-card {
+            .kit-summary {
                 background: transparent !important;
-                color: #333 !important;
-                padding: 0 !important;
+                padding: 0 8px !important;
                 display: inline-flex !important;
+                flex-direction: column !important;
                 align-items: center !important;
-                gap: 5px !important;
+                gap: 3px !important;
+                border-right: 1px solid #999 !important;
             }
 
-            .stat-number {
-                font-size: 1.1em !important;
-                margin: 0 !important;
-                font-weight: bold !important;
+            .kit-summary:last-child {
+                border-right: none !important;
             }
 
-            .stat-label {
+            .kit-summary-title {
+                font-size: 0.75em !important;
+                margin-bottom: 2px !important;
+            }
+
+            .kit-summary-stats {
                 font-size: 0.85em !important;
+                gap: 2px !important;
+            }
+
+            .kit-summary-stats > span:first-child {
+                font-size: 1em !important;
             }
 
             .kit-content {
                 clear: both !important;
                 page-break-before: avoid !important;
+            }
+
+            .kit-content::before {
+                content: '';
+                display: block;
+                font-size: 1em !important;
+                font-weight: 700 !important;
+                background: #1a1a1a !important;
+                color: white !important;
+                padding: 4px 8px !important;
+                margin: 8px 0 4px 0 !important;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            #electronicsKit::before {
+                content: '📦 电子套件' !important;
+            }
+
+            #metalKit::before {
+                content: '🔧 金属零件' !important;
+            }
+
+            #legoKit::before {
+                content: '🧱 乐高零件' !important;
             }
 
             .category {
@@ -750,18 +803,27 @@
 
             <div class="summary">
                 <h2>📊 使用统计</h2>
-                <div class="summary-stats">
-                    <div class="stat-card">
-                        <div class="stat-number" id="totalParts">0</div>
-                        <div class="stat-label">总零件类型</div>
+                <div class="summary-kits">
+                    <div class="kit-summary">
+                        <div class="kit-summary-title">电子套件</div>
+                        <div class="kit-summary-stats">
+                            <span><span id="electronicsUsed">0</span>/<span id="electronicsTotal">0</span></span>
+                            <span class="over-count" id="electronicsOver">超规: 0</span>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="usedParts">0</div>
-                        <div class="stat-label">已使用类型</div>
+                    <div class="kit-summary">
+                        <div class="kit-summary-title">金属零件</div>
+                        <div class="kit-summary-stats">
+                            <span><span id="metalUsed">0</span>/<span id="metalTotal">0</span></span>
+                            <span class="over-count" id="metalOver">超规: 0</span>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="overLimitParts">0</div>
-                        <div class="stat-label">超规零件</div>
+                    <div class="kit-summary">
+                        <div class="kit-summary-title">乐高零件</div>
+                        <div class="kit-summary-stats">
+                            <span><span id="legoUsed">0</span>/<span id="legoTotal">0</span></span>
+                            <span class="over-count" id="legoOver">超规: 0</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1201,26 +1263,43 @@
         }
 
         function updateSummary() {
-            const kit = kitsData[currentKit];
-            let totalParts = 0;
-            let usedParts = 0;
-            let overLimitParts = 0;
+            // 统计三个套件的情况
+            const kits = ['electronics', 'metal', 'lego'];
+            const kitIds = {
+                'electronics': { used: 'electronicsUsed', total: 'electronicsTotal', over: 'electronicsOver' },
+                'metal': { used: 'metalUsed', total: 'metalTotal', over: 'metalOver' },
+                'lego': { used: 'legoUsed', total: 'legoTotal', over: 'legoOver' }
+            };
 
-            for (const [category, parts] of Object.entries(kit)) {
-                parts.forEach(part => {
-                    totalParts++;
-                    const key = getPartKey(currentKit, part.name);
-                    const usage = partsUsage[key] || { robot1: 0, robot2: 0 };
-                    const total = usage.robot1 + usage.robot2;
+            kits.forEach(kitName => {
+                const kit = kitsData[kitName];
+                let totalParts = 0;
+                let usedParts = 0;
+                let overLimitParts = 0;
 
-                    if (total > 0) usedParts++;
-                    if (total > part.limit) overLimitParts++;
-                });
-            }
+                for (const [category, parts] of Object.entries(kit)) {
+                    parts.forEach(part => {
+                        totalParts++;
+                        const key = getPartKey(kitName, part.name);
+                        const usage = partsUsage[key] || { robot1: 0, robot2: 0 };
+                        const total = usage.robot1 + usage.robot2;
 
-            document.getElementById('totalParts').textContent = totalParts;
-            document.getElementById('usedParts').textContent = usedParts;
-            document.getElementById('overLimitParts').textContent = overLimitParts;
+                        if (total > 0) usedParts++;
+                        if (total > part.limit) overLimitParts++;
+                    });
+                }
+
+                const ids = kitIds[kitName];
+                document.getElementById(ids.used).textContent = usedParts;
+                document.getElementById(ids.total).textContent = totalParts;
+                const overElement = document.getElementById(ids.over);
+                overElement.textContent = `超规: ${overLimitParts}`;
+                if (overLimitParts > 0) {
+                    overElement.classList.add('has-over');
+                } else {
+                    overElement.classList.remove('has-over');
+                }
+            });
         }
 
         function switchKit(kitName) {
